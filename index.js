@@ -1,90 +1,75 @@
+const {Blockchain, Transaction}= require('./blockchain')
+const EC=require('elliptic').ec
 
-const sha256=require('crypto-js/sha256')
-class Block{
-    constructor(index, timeStamp, data, previousHash=''){
+const ec=new EC('secp256k1')
 
-        this.index=index
-        this.timeStamp=timeStamp
-        this.data=data
-        this.previousHash=previousHash
-        this.hash=this.calculateHash()
-        this.nonce=0
+const myKey=ec.keyFromPrivate('350e994cb901309831cef25c2feccdb397810e28f6335c5ca43c7af9fb2db85a')
 
-
-    }
-
-    calculateHash(){
-     return sha256(this.index + this.previousHash + this.timeStamp + JSON.stringify(this.data) + this.nonce).toString()
-    }
-
-    mineBlock(difficulty){
-        while(this.hash.substring(0, difficulty) !==Array(difficulty+1).join('0')){
-            this.nonce++
-            this.hash=this.calculateHash()
-        }
-        console.log('Block mined ' + this.hash)
-    }
-}
-
-
-
-class Blockchain{
-    constructor(){
-        this.difficulty=4
-        this.chain=[this.createGenesisBlock()]
-    }
-    createGenesisBlock(){
-        return new Block(0, '18/10/2021', 'Genesis Block', '0')
-    }
-
-    getLatestBlock(){
-   return this.chain[this.chain.length-1]
-    }
-    addBlock(newBlock){
-        newBlock.previousHash=this.getLatestBlock().hash
-        newBlock.mineBlock(this.difficulty)
-        this.chain.push(newBlock)
-    }
-
-    isChainValid(){
-        for(let i=1; i<this.chain.length; i++){
-            const currentBlock=this.chain[i]
-            const previousBlock=this.chain[i-1]
-
-            if(currentBlock.hash !==currentBlock.calculateHash()){
-                return false
-            }
-            if(currentBlock.previousHash !==previousBlock.hash){
-                return false
-            }
-            
-        }
-        return true
-    }
-}
-
+const myWalletAddress=myKey.getPublic('hex')
 let savjeecoin=new Blockchain()
-savjeecoin.addBlock(new Block(1,'17/10/2021',  {amount:4}))
-savjeecoin.addBlock(new Block(2,'18/10/2021',  {amount:10}))
+const tx1=new Transaction(myWalletAddress, 'Public key goes here', 10)
+tx1.signTransaction(myKey)
+savjeecoin.addTransaction(tx1)
+console.log()
+console.log('\n Starting the miner...')
+
+savjeecoin.minePendingTransactions(myWalletAddress)
+
+console.log()
+console.log('\n Balance of Ndeta ', savjeecoin.getBalanceOfAddress(myWalletAddress))
+
+// Trying to manipilate and cheat the blockchain will not work as you can see from this test
+savjeecoin.chain[1].transactions[0].amount=0
+console.log()
+console.log( 'Is cahin valid?', savjeecoin.isChainValid())
+
+// savjeecoin.createTransaction(new Transaction('adress 1', 'address 2', 100))
+// savjeecoin.createTransaction(new Transaction('adress 2', 'address 1', 50))
+
+// console.log('\n Starting the miner again...')
+
+// savjeecoin.minePendingTransactions('Ndeta')
 
 
-console.log(JSON.stringify( savjeecoin, null, 4))
-
-
-// Check if blochain is valid
-console.log('Is Blockchain valid? '  +  savjeecoin.isChainValid())
-
-savjeecoin.chain[1].data={amount:100}
-
-savjeecoin.chain[1].hash=savjeecoin.chain[1].calculateHash()
-
-console.log('Is Blockchain valid? '  +  savjeecoin.isChainValid())
+// console.log('\n Balance of Ndeta again ', savjeecoin.getBalanceOfAddress('Ndeta'))
 
 
 
 
-console.log('Mining block 1......')
-savjeecoin.addBlock(new Block(3,'17/10/2021',  {amount:4}))
 
-console.log('Mining block 3......')
-savjeecoin.addBlock(new Block(2,'18/10/2021',  {amount:10}))
+
+
+
+
+
+
+
+
+
+
+// TEST CODE
+// let savjeecoin=new Blockchain()
+// savjeecoin.addBlock(new Block(1,'17/10/2021',  {amount:4}))
+// savjeecoin.addBlock(new Block(2,'18/10/2021',  {amount:10}))
+
+
+// console.log(JSON.stringify( savjeecoin, null, 4))
+
+
+// // Check if blochain is valid
+// console.log('Is Blockchain valid? '  +  savjeecoin.isChainValid())
+
+// savjeecoin.chain[1].transactions={amount:100}
+
+// savjeecoin.chain[1].hash=savjeecoin.chain[1].calculateHash()
+
+// console.log('Is Blockchain valid? '  +  savjeecoin.isChainValid())
+
+
+
+
+// console.log('Mining block 1......')
+// savjeecoin.addBlock(new Block(3,'17/10/2021',  {amount:4}))
+
+// console.log('Mining block 3......')
+// savjeecoin.addBlock(new Block(2,'18/10/2021',  {amount:10}))
